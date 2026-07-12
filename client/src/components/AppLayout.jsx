@@ -12,19 +12,35 @@ const AppLayout = () => {
     navigate('/login');
   };
 
-  const navItems = [
+  let navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-    { name: 'Assets', path: '/assets', icon: <Box size={20} /> },
-    { name: 'Allocations', path: '/allocations', icon: <ArrowRightLeft size={20} /> },
-    { name: 'Bookings', path: '/bookings', icon: <CalendarClock size={20} /> },
-    { name: 'Maintenance', path: '/maintenance', icon: <Wrench size={20} /> },
-    { name: 'Audits', path: '/audits', icon: <FileSearch size={20} /> },
-    { name: 'Reports', path: '/reports', icon: <BarChart3 size={20} /> },
-    { name: 'Logs', path: '/logs', icon: <Activity size={20} /> },
   ];
 
-  if (user?.role === 'Admin') {
-    navItems.splice(1, 0, { name: 'Org Setup', path: '/org-setup', icon: <Users size={20} /> });
+  if (['Admin', 'Asset Manager'].includes(user?.role)) {
+    if (user?.role === 'Admin') {
+      navItems.push({ name: 'Org Setup', path: '/org-setup', icon: <Users size={20} /> });
+    }
+    navItems.push(
+      { name: 'All Assets', path: '/assets', icon: <Box size={20} /> },
+      { name: 'Allocations', path: '/allocations', icon: <ArrowRightLeft size={20} /> }
+    );
+  } else {
+    navItems.push(
+      { name: 'My Assets', path: '/my-assets', icon: <Box size={20} /> }
+    );
+  }
+
+  navItems.push(
+    { name: 'Bookings', path: '/bookings', icon: <CalendarClock size={20} /> },
+    { name: 'Maintenance', path: '/maintenance', icon: <Wrench size={20} /> }
+  );
+
+  if (['Admin', 'Asset Manager'].includes(user?.role)) {
+    navItems.push(
+      { name: 'Audits', path: '/audits', icon: <FileSearch size={20} /> },
+      { name: 'Reports', path: '/reports', icon: <BarChart3 size={20} /> },
+      { name: 'Logs', path: '/logs', icon: <Activity size={20} /> }
+    );
   }
 
   return (

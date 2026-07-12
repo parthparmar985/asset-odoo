@@ -11,6 +11,8 @@ import AssetDirectory from './pages/AssetDirectory';
 import AssetAllocation from './pages/AssetAllocation';
 import Bookings from './pages/Bookings';
 import Maintenance from './pages/Maintenance';
+import MyAssets from './pages/MyAssets';
+
 import Audits from './pages/Audits';
 import Reports from './pages/Reports';
 import ActivityLogs from './pages/ActivityLogs';
@@ -43,10 +45,11 @@ function App() {
         <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="org-setup" element={<ProtectedRoute requiredRole="Admin"><OrgSetup /></ProtectedRoute>} />
-          <Route path="assets" element={<AssetDirectory />} />
-          <Route path="allocations" element={<AssetAllocation />} />
-          <Route path="bookings" element={<Bookings />} />
-          <Route path="maintenance" element={<Maintenance />} />
+          <Route path="assets" element={<ProtectedRoute><AssetDirectory /></ProtectedRoute>} />
+          <Route path="my-assets" element={<ProtectedRoute><MyAssets /></ProtectedRoute>} />
+          <Route path="allocations" element={<ProtectedRoute><AssetAllocation /></ProtectedRoute>} />
+          <Route path="bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
+          <Route path="maintenance" element={<ProtectedRoute><Maintenance /></ProtectedRoute>} />
           <Route path="audits" element={<Audits />} />
           <Route path="reports" element={<Reports />} />
           <Route path="logs" element={<ActivityLogs />} />
