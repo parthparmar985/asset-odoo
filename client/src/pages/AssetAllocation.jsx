@@ -228,7 +228,7 @@ const AssetAllocation = () => {
       {allocations.map(alloc => (
         <div key={alloc._id} style={{...styles.historyItem, display: 'flex', justifyContent: 'space-between'}}>
           <span>
-            {format(new Date(alloc.allocationDate), 'MMM dd')} - {alloc.status === 'Active' ? 'Allocated to' : 'Returned by'} {alloc.allocatedToUser?.name} - {alloc.asset?.name}
+            {format(new Date(alloc.createdAt), 'MMM dd')} - {alloc.status === 'Active' ? 'Allocated to' : 'Returned by'} {alloc.allocatedToUser?.name} - {alloc.asset?.name}
           </span>
           {alloc.status === 'Active' && ['Admin', 'Asset Manager'].includes(user?.role) && (
             <button onClick={() => handleReturn(alloc._id)} style={{ fontSize: '0.8rem', color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
