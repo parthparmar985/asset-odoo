@@ -7,6 +7,7 @@ const router = express.Router();
 router.post('/register', registerUser);
 router.post('/login', authUser);
 router.route('/').get(protect, adminOnly, getUsers);
+router.route('/users').get(protect, adminOnly, getUsers);
 router.route('/:id/role').put(protect, adminOnly, updateUserRole);
 
 export default router;
