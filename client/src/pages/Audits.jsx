@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { FileSearch } from 'lucide-react';
+import { FileSearch, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,7 @@ const Audits = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line
   }, []);
 
   const fetchData = async () => {
@@ -26,7 +27,7 @@ const Audits = () => {
       const [auditsRes, deptsRes, usersRes] = await Promise.all([
         axios.get('/api/audits', config).catch(() => ({ data: [] })),
         axios.get('/api/departments', config).catch(() => ({ data: [] })),
-        axios.get('/api/auth', config).catch(() => ({ data: [] }))
+        axios.get('/api/auth/users', config).catch(() => ({ data: [] }))
       ]);
       setAudits(auditsRes.data);
       setDepartments(deptsRes.data);
@@ -55,90 +56,115 @@ const Audits = () => {
     setFormData({ ...formData, assignedAuditors: selectedOptions });
   };
 
+  const styles = {
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
+    title: { fontSize: '1.75rem', fontWeight: 800, margin: 0, color: '#0F172A' },
+    subtitle: { color: '#64748B', fontSize: '0.95rem', marginTop: '0.25rem' },
+    addButton: {
+      padding: '0.6rem 1.5rem', borderRadius: '20px', border: '1.5px solid #1E293B', backgroundColor: '#E2F0EA',
+      color: '#1E293B', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'all 0.2s'
+    },
+    tableHeader: { backgroundColor: '#F1F0EA', borderRadius: '12px', border: '1.5px solid #1E293B', display: 'grid', padding: '0.75rem 1.5rem', fontWeight: '600', color: '#475569', marginBottom: '0.5rem' },
+    tableRow: { display: 'grid', padding: '1rem 1.5rem', alignItems: 'center', borderBottom: '1px solid #E2E8F0', color: '#334155' },
+    badge: (status) => ({ display: 'inline-block', padding: '0.25rem 1rem', borderRadius: '20px', border: `1.5px solid ${status === 'Open' ? '#FFCE20' : '#10B981'}`, backgroundColor: 'transparent', color: '#1E293B', fontSize: '0.75rem', fontWeight: '600' }),
+    formCard: { backgroundColor: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0', marginBottom: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' },
+    input: { padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid #CBD5E1', width: '100%', outline: 'none', fontSize: '0.95rem', color: '#0F172A', marginTop: '0.25rem' }
+  };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2>Asset Audits</h2>
-        {user?.role === 'Admin' && (
-          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-            <FileSearch size={18} /> {showForm ? 'Cancel' : 'New Audit Cycle'}
+    <div className="animate-fade-in" style={{ padding: '1rem', fontFamily: "'Outfit', sans-serif" }}>
+      
+      <div style={styles.header}>
+        <div>
+          <h2 style={styles.title}>Asset Audits</h2>
+          <p style={styles.subtitle}>Manage and track inventory audit cycles</p>
+        </div>
+        {(user?.role === 'Admin' || user?.role === 'Asset Manager') && (
+          <button style={styles.addButton} onClick={() => setShowForm(!showForm)}>
+            {showForm ? <X size={18} /> : <Plus size={18} />}
+            {showForm ? 'Close' : 'New Audit Cycle'}
           </button>
         )}
       </div>
 
       {showForm && (
-        <div className="card mb-6" style={{ borderTop: '4px solid var(--primary-color)' }}>
-          <h3>Create Audit Cycle</h3>
-          <form onSubmit={handleCreateAudit} className="mt-4 grid-cols-2">
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">Audit Name</label>
-              <input type="text" className="form-input" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+        <div style={styles.formCard}>
+          <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.25rem', fontWeight: 700, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FileSearch size={20} color="#4318FF" /> Create New Audit Cycle
+          </h3>
+          <form onSubmit={handleCreateAudit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Audit Name</label>
+              <input type="text" style={styles.input} placeholder="e.g. Q3 IT Assets Audit" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
             </div>
-            <div className="form-group">
-              <label className="form-label">Department Scope (Optional)</label>
-              <select className="form-input" value={formData.departmentScope} onChange={e => setFormData({...formData, departmentScope: e.target.value})}>
-                <option value="">All Departments</option>
+            
+            <div>
+              <label style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Department Scope (Optional)</label>
+              <select style={{...styles.input, backgroundColor: '#fff'}} value={formData.departmentScope} onChange={e => setFormData({...formData, departmentScope: e.target.value})}>
+                <option value="">All Departments (Entire Organization)</option>
                 {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
               </select>
             </div>
-            <div className="form-group">
-              <label className="form-label">Assigned Auditors</label>
-              <select multiple className="form-input" value={formData.assignedAuditors} onChange={handleAuditorChange} style={{ height: '80px' }} required>
-                {users.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+
+            <div>
+              <label style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Assigned Auditors</label>
+              <select multiple style={{...styles.input, height: 'auto', minHeight: '80px', backgroundColor: '#fff'}} value={formData.assignedAuditors} onChange={handleAuditorChange} required>
+                {users.map(u => <option key={u._id} value={u._id}>{u.name} ({u.role})</option>)}
               </select>
-              <small style={{ color: 'var(--text-muted)' }}>Hold Ctrl/Cmd to select multiple</small>
+              <small style={{ color: '#94A3B8', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>Hold Ctrl/Cmd to select multiple</small>
             </div>
-            <div className="form-group">
-              <label className="form-label">Start Date</label>
-              <input type="date" className="form-input" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} required />
+
+            <div>
+              <label style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Start Date</label>
+              <input type="date" style={styles.input} value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} required />
             </div>
-            <div className="form-group">
-              <label className="form-label">End Date</label>
-              <input type="date" className="form-input" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} required />
+
+            <div>
+              <label style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>End Date</label>
+              <input type="date" style={styles.input} value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} required />
             </div>
-            <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="submit" className="btn btn-primary">Start Audit Cycle</button>
+
+            <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button type="submit" style={{ ...styles.addButton, backgroundColor: '#4318FF', color: '#fff', border: 'none', padding: '0.75rem 2rem' }}>
+                Start Audit Cycle
+              </button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="card">
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                <th style={{ padding: '0.75rem' }}>Name</th>
-                <th style={{ padding: '0.75rem' }}>Scope</th>
-                <th style={{ padding: '0.75rem' }}>Auditors</th>
-                <th style={{ padding: '0.75rem' }}>Date Range</th>
-                <th style={{ padding: '0.75rem' }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {audits.length === 0 ? (
-                <tr><td colSpan="5" style={{ padding: '1.5rem', textAlign: 'center' }}>No audit cycles found.</td></tr>
-              ) : (
-                audits.map(a => (
-                  <tr key={a._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '0.75rem', fontWeight: '500' }}>{a.name}</td>
-                    <td style={{ padding: '0.75rem' }}>{a.departmentScope?.name || 'All'}</td>
-                    <td style={{ padding: '0.75rem' }}>{a.assignedAuditors?.length || 0} assigned</td>
-                    <td style={{ padding: '0.75rem' }}>
-                      {format(new Date(a.startDate), 'MMM dd')} - {format(new Date(a.endDate), 'MMM dd')}
-                    </td>
-                    <td style={{ padding: '0.75rem' }}>
-                      <span className={`badge ${a.status === 'Open' ? 'badge-warning' : 'badge-success'}`}>
-                        {a.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      <div>
+        <div style={{ ...styles.tableHeader, gridTemplateColumns: '2fr 1.5fr 1.5fr 1.5fr 1fr' }}>
+          <div>Audit Name</div>
+          <div>Scope</div>
+          <div>Auditors</div>
+          <div>Date Range</div>
+          <div>Status</div>
         </div>
+        
+        {audits.length === 0 ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#94A3B8', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+            No audit cycles found. Click "New Audit Cycle" to start one.
+          </div>
+        ) : (
+          <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+            {audits.map((a, i) => (
+              <div key={a._id} style={{ ...styles.tableRow, gridTemplateColumns: '2fr 1.5fr 1.5fr 1.5fr 1fr', borderBottom: i === audits.length - 1 ? 'none' : '1px solid #E2E8F0' }}>
+                <div style={{ fontWeight: '600', color: '#1E293B' }}>{a.name}</div>
+                <div>{a.departmentScope?.name || 'All Departments'}</div>
+                <div>{a.assignedAuditors?.length || 0} assigned</div>
+                <div style={{ fontSize: '0.9rem' }}>
+                  {a.startDate ? format(new Date(a.startDate), 'MMM dd, yyyy') : '--'} - {a.endDate ? format(new Date(a.endDate), 'MMM dd, yyyy') : '--'}
+                </div>
+                <div>
+                  <span style={styles.badge(a.status)}>{a.status || 'Open'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
     </div>
   );
 };

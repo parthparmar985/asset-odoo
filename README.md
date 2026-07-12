@@ -1,55 +1,90 @@
 # AssetFlow – Enterprise Asset & Resource Management System
 
-> A modern enterprise-grade Asset & Resource Management platform built for the Odoo Hackathon 2026.
+> A Modern Full-Stack Enterprise Asset & Resource Management System developed for the Odoo Hackathon 2026.
 
 ---
 
 ## Overview
 
-AssetFlow is a centralized ERP solution designed to help organizations efficiently manage their physical assets and shared resources. It replaces manual spreadsheets and paper-based tracking with a streamlined digital workflow, providing complete visibility into asset allocation, maintenance, bookings, audits, and reporting.
+AssetFlow is a modern Full-Stack Enterprise Asset & Resource Management System designed to help organizations efficiently manage physical assets and shared resources through a centralized ERP platform.
 
-The system enables organizations to manage the complete lifecycle of assets—from registration to retirement—while improving accountability, operational efficiency, and decision-making.
+The application replaces manual spreadsheets and paper-based tracking with an intelligent digital workflow, providing complete visibility into asset allocation, maintenance, bookings, audits, analytics, and reporting.
+
+Built with modern web technologies, AssetFlow provides secure authentication, role-based access control, reusable architecture, responsive UI, and real-time operational insights.
+
+---
+
+## Vision
+
+To simplify and digitize enterprise asset management by providing a centralized, scalable, and intelligent ERP platform for organizations of all sizes.
+
+---
+
+## Mission
+
+The platform enables organizations to:
+
+- Manage departments and employees
+- Register and track assets
+- Allocate assets securely
+- Prevent duplicate allocations
+- Manage shared resource bookings
+- Automate maintenance workflows
+- Conduct structured asset audits
+- Generate operational reports
+- Improve decision-making through analytics
 
 ---
 
 ## Problem Statement
 
-Organizations often struggle with:
+Organizations often face challenges such as:
 
 - Manual asset tracking
+- Spreadsheet-based workflows
 - Double allocation of assets
-- Inefficient maintenance management
-- Shared resource booking conflicts
+- Maintenance management issues
+- Resource booking conflicts
 - Lack of audit visibility
-- Poor reporting and operational insights
+- Limited operational insights
 
-AssetFlow solves these challenges by providing a centralized and intelligent asset management platform.
+AssetFlow addresses these challenges through a centralized ERP system with secure workflows and intelligent validation.
 
 ---
 
-## Key Features
+## Features
+
+### Authentication
+
+- Secure Login
+- Secure Signup
+- JWT Authentication
+- Password Encryption
+- Role-Based Authentication
+- Session Management
+- Protected Routes
 
 ### Organization Management
 
 - Department Management
 - Employee Directory
 - Asset Categories
-- Role-Based Access Control
-
----
+- Parent Departments
+- Department Head Assignment
+- Employee Status Management
 
 ### Asset Management
 
-- Register Assets
+- Asset Registration
+- Auto Asset Tag Generation
 - QR Code Support
-- Asset Tag Generation
-- Asset Lifecycle Tracking
-- Asset Status Management
-- Asset History
-- Asset Documents
 - Asset Images
+- Asset Documents
+- Asset History
+- Asset Lifecycle Tracking
+- Search & Filters
 
-Asset Statuses:
+Supported Asset Statuses
 
 - Available
 - Allocated
@@ -59,8 +94,6 @@ Asset Statuses:
 - Retired
 - Disposed
 
----
-
 ### Asset Allocation
 
 - Allocate Assets
@@ -69,28 +102,19 @@ Asset Statuses:
 - Approval Workflow
 - Allocation History
 - Expected Return Tracking
-- Conflict Detection
-
----
+- Duplicate Allocation Prevention
 
 ### Resource Booking
 
-Manage shared resources such as:
-
 - Meeting Rooms
-- Vehicles
+- Company Vehicles
 - Equipment
 - Projectors
-
-Features:
-
 - Calendar View
 - Booking Validation
 - Overlap Detection
-- Reschedule
-- Cancellation
-
----
+- Reschedule Booking
+- Booking Cancellation
 
 ### Maintenance Management
 
@@ -98,14 +122,22 @@ Features:
 - Approval Workflow
 - Technician Assignment
 - Progress Tracking
-- Attachments
+- Resolution Tracking
 - Maintenance History
 
-Workflow:
+Workflow
 
-Pending → Approved → Assigned → In Progress → Resolved
-
----
+```
+Pending
+    ↓
+Approved
+    ↓
+Technician Assigned
+    ↓
+In Progress
+    ↓
+Resolved
+```
 
 ### Asset Audits
 
@@ -115,91 +147,101 @@ Pending → Approved → Assigned → In Progress → Resolved
 - Missing Asset Detection
 - Damaged Asset Reporting
 - Discrepancy Reports
+- Audit History
 
----
-
-### Dashboard & Analytics
-
-Interactive dashboard including:
+### Dashboard
 
 - Available Assets
 - Allocated Assets
 - Assets Under Maintenance
+- Active Bookings
 - Pending Transfers
 - Upcoming Returns
-- Maintenance Trends
-- Asset Utilization
-- Department Statistics
-
----
+- Overdue Returns
+- Recent Activities
+- Charts
+- Analytics
+- Notifications
 
 ### Reports
 
-Generate reports for:
-
 - Asset Utilization
 - Department Summary
-- Maintenance History
-- Resource Bookings
+- Allocation Reports
+- Maintenance Reports
+- Booking Reports
 - Audit Reports
 
-Export Support:
+Export Formats
 
 - PDF
 - Excel
 - CSV
 
----
-
 ### Notifications
-
-Real-time notifications for:
 
 - Asset Allocation
 - Transfer Approval
 - Maintenance Updates
 - Booking Confirmation
+- Booking Reminder
 - Audit Alerts
-- Overdue Returns
+- Overdue Return Alerts
+
+### Activity Logs
+
+- Login History
+- Asset Activities
+- Booking Activities
+- Maintenance Activities
+- Audit Activities
+- Role Changes
+- System Logs
 
 ---
 
-### User Roles
+## User Roles
 
-#### Admin
+### Admin
 
-- Manage entire system
-- Create departments
-- Manage employees
-- Configure settings
-- View reports
+- Manage Departments
+- Manage Employees
+- Assign Roles
+- Configure Organization
+- Manage Asset Categories
+- Manage Audit Cycles
+- View Analytics
 
-#### Asset Manager
+### Asset Manager
 
-- Register assets
-- Allocate assets
-- Approve maintenance
-- Handle transfers
+- Register Assets
+- Allocate Assets
+- Approve Transfers
+- Approve Maintenance Requests
+- Approve Returns
+- Manage Asset Lifecycle
 
-#### Department Head
+### Department Head
 
-- View department assets
-- Approve requests
-- Monitor allocations
+- View Department Assets
+- Approve Requests
+- Book Resources
+- Monitor Department Allocations
 
-#### Employee
+### Employee
 
-- View assigned assets
-- Raise maintenance requests
-- Book resources
-- Request transfers
+- View Assigned Assets
+- Raise Maintenance Requests
+- Book Resources
+- Request Asset Transfers
+- Request Asset Returns
 
 ---
 
 ## System Workflow
 
 ```
-Department Setup
+Organization Setup
         │
         ▼
 Employee Management
@@ -229,38 +271,79 @@ Reports & Dashboard
 
 ### Frontend
 
-- React
-- TypeScript
+- React.js
+- Vite
+- JavaScript (ES6+)
 - Tailwind CSS
 - shadcn/ui
-- React Router
+- React Router DOM
+- Axios
 
 ### Backend
 
-- Supabase
-- PostgreSQL
-- Authentication
-- Row Level Security
+- Node.js
+- Express.js
+- REST APIs
+- JWT Authentication
+- bcrypt
+- Multer
 
 ### Database
 
-- PostgreSQL
+- MongoDB
+- Mongoose
+
+---
+
+## Architecture
+
+```
+React + Vite
+
+        │
+
+REST API
+
+        │
+
+Node.js + Express
+
+        │
+
+MongoDB
+```
+
+---
+
+## Validations
+
+- Client-side Validation
+- Server-side Validation
+- JWT Authentication
+- Password Encryption
+- Role-Based Authorization
+- Duplicate Allocation Prevention
+- Booking Overlap Validation
+- Protected APIs
+- Error Handling
+- Input Validation
 
 ---
 
 ## Main Modules
 
+- Authentication
 - Dashboard
 - Organization
 - Departments
 - Employees
 - Asset Categories
 - Assets
-- Allocations
-- Transfers
-- Bookings
+- Asset Allocation
+- Transfer Requests
+- Resource Booking
 - Maintenance
-- Audits
+- Asset Audits
 - Reports
 - Notifications
 - Activity Logs
@@ -270,26 +353,26 @@ Reports & Dashboard
 
 ## Objectives
 
-- Improve asset visibility
-- Prevent duplicate allocation
-- Simplify maintenance workflow
-- Enable audit tracking
-- Increase operational efficiency
-- Reduce manual effort
-- Provide actionable insights
+- Improve Asset Visibility
+- Prevent Duplicate Allocation
+- Reduce Manual Processes
+- Improve Accountability
+- Simplify Maintenance
+- Automate Audits
+- Generate Actionable Insights
 
 ---
 
 ## Future Enhancements
 
 - QR Code Scanner
-- Mobile Application
-- AI-based Asset Prediction
-- Predictive Maintenance
 - RFID Integration
-- IoT-enabled Asset Tracking
-- Email & SMS Notifications
-- Barcode Printing
+- Mobile Application
+- AI-Based Asset Prediction
+- Predictive Maintenance
+- IoT Integration
+- Email Notifications
+- SMS Notifications
 - Multi-Company Support
 
 ---
@@ -302,6 +385,17 @@ Enterprise Asset & Resource Management System
 
 ---
 
+## Built With
+
+- React.js
+- Vite
+- Node.js
+- Express.js
+- MongoDB
+- Tailwind CSS
+
+---
+
 ## License
 
-This project is developed solely for educational and hackathon purposes.git 
+This project has been developed for educational, learning, and hackathon purposes only.

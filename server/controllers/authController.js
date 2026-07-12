@@ -60,13 +60,16 @@ export const authUser = async (req, res) => {
   }
 };
 
-// Admin promoting a user
-export const updateUserRole = async (req, res) => {
+export const updateUser = async (req, res) => {
   try {
-    const { role } = req.body;
+    const { name, email, department, role, status } = req.body;
     const user = await User.findById(req.params.id);
     if (user) {
+      user.name = name || user.name;
+      user.email = email || user.email;
+      if (department !== undefined) user.department = department;
       user.role = role || user.role;
+      user.status = status || user.status;
       const updatedUser = await user.save();
       res.json(updatedUser);
     } else {
