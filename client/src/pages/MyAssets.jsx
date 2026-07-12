@@ -94,7 +94,7 @@ const MyAssets = () => {
             <div style={styles.name}>{alloc.asset?.name} ({alloc.asset?.tag})</div>
             <div style={styles.details}>Category: {alloc.asset?.category?.name || alloc.asset?.category}</div>
             <div style={styles.details}>
-              Allocated On: {format(new Date(alloc.allocationDate), 'MMM dd, yyyy')}
+              Allocated On: {format(new Date(alloc.createdAt), 'MMM dd, yyyy')}
             </div>
             {alloc.expectedReturnDate && (
               <div style={styles.details}>
