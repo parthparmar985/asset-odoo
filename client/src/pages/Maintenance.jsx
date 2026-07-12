@@ -17,6 +17,9 @@ const Maintenance = () => {
 
   const isManager = ['Admin', 'Asset Manager'].includes(user?.role);
 
+  // Define Kanban columns
+  const COLUMNS = ['Pending', 'Approved', 'In Progress', 'Resolved'];
+
   useEffect(() => {
     fetchData();
   }, [user]);
@@ -25,17 +28,14 @@ const Maintenance = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       
-      // Fetch maintenance requests
       const { data } = await axios.get('/api/maintenance', config);
       
       if (isManager) {
         setRequests(data);
       } else {
-        // Employee only sees their own requests
         setRequests(data.filter(r => r.requestedBy?._id === user._id));
       }
 
-      // Fetch assets the user currently holds (for the dropdown)
       if (!isManager) {
         const allocRes = await axios.get('/api/allocations', config);
         const activeMine = allocRes.data.filter(a => 
@@ -77,7 +77,10 @@ const Maintenance = () => {
   const styles = {
     container: {
       padding: '1.5rem',
-      fontFamily: "'Outfit', sans-serif"
+      fontFamily: "'Outfit', sans-serif",
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column'
     },
     headerRow: {
       display: 'flex',
@@ -92,7 +95,7 @@ const Maintenance = () => {
     },
     btnPrimary: {
       padding: '0.6rem 1.25rem',
-      borderRadius: '12px',
+      borderRadius: '8px',
       border: '1.5px solid #1E293B',
       backgroundColor: '#E2F0EA',
       color: '#1E293B',
@@ -102,6 +105,75 @@ const Maintenance = () => {
       display: 'flex',
       alignItems: 'center',
       gap: '0.25rem'
+    },
+    kanbanBoard: {
+      display: 'flex',
+      gap: '1.5rem',
+      overflowX: 'auto',
+      paddingBottom: '1rem',
+      flexGrow: 1,
+      minHeight: '600px'
+    },
+    column: {
+      minWidth: '280px',
+      width: '280px',
+      backgroundColor: '#F8FAFC',
+      border: '1px solid #E2E8F0',
+      borderRadius: '12px',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative'
+    },
+    columnHeader: {
+      padding: '1rem',
+      fontWeight: '600',
+      color: '#475569',
+      borderBottom: '1px solid #E2E8F0',
+      textAlign: 'center',
+      textTransform: 'capitalize'
+    },
+    cardList: {
+      padding: '1rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1rem',
+      flexGrow: 1,
+      overflowY: 'auto'
+    },
+    card: (status) => ({
+      backgroundColor: status === 'Resolved' ? '#D1FAE5' : '#FFFFFF',
+      border: '1.5px solid #1E293B',
+      borderRadius: '12px',
+      padding: '1rem',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem'
+    }),
+    cardTag: {
+      fontWeight: '700',
+      fontSize: '0.85rem',
+      color: '#1E293B'
+    },
+    cardDesc: {
+      fontSize: '0.9rem',
+      color: '#334155',
+      lineHeight: '1.4'
+    },
+    cardMeta: {
+      fontSize: '0.8rem',
+      color: '#64748B'
+    },
+    actionBtn: {
+      marginTop: '0.5rem',
+      padding: '0.4rem',
+      borderRadius: '6px',
+      border: '1px solid #CBD5E1',
+      backgroundColor: '#F1F5F9',
+      fontSize: '0.8rem',
+      fontWeight: '500',
+      cursor: 'pointer',
+      textAlign: 'center'
     },
     formCard: {
       padding: '1.5rem',
@@ -114,65 +186,18 @@ const Maintenance = () => {
       width: '100%',
       padding: '0.6rem 1rem',
       borderRadius: '8px',
-      border: '1.5px solid #1E293B',
+      border: '1px solid #CBD5E1',
       backgroundColor: '#FFFFFF',
       fontSize: '0.95rem',
       outline: 'none',
       marginBottom: '1rem'
-    },
-    tableHeader: {
-      backgroundColor: '#F1F0EA',
-      borderRadius: '12px',
-      border: '1.5px solid #1E293B',
-      display: 'grid',
-      gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 1fr',
-      padding: '0.75rem 1.5rem',
-      fontWeight: '600',
-      color: '#475569',
-      marginBottom: '0.5rem'
-    },
-    tableRow: {
-      display: 'grid',
-      gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 1fr',
-      padding: '0.875rem 1.5rem',
-      alignItems: 'center',
-      borderBottom: '1px solid #E2E8F0',
-      color: '#334155',
-      fontSize: '0.9rem'
-    },
-    statusBadge: (status) => {
-      let color = '#64748B';
-      if(status === 'Pending') color = '#F59E0B';
-      if(status === 'Approved' || status === 'In Progress') color = '#3B82F6';
-      if(status === 'Resolved') color = '#10B981';
-      if(status === 'Rejected') color = '#DC2626';
-      
-      return {
-        display: 'inline-block',
-        padding: '0.25rem 0.75rem',
-        borderRadius: '20px',
-        border: `1.5px solid ${color}`,
-        color: color,
-        fontSize: '0.75rem',
-        fontWeight: '600'
-      };
-    },
-    actionBtn: (type) => ({
-      padding: '0.25rem 0.75rem',
-      borderRadius: '6px',
-      border: `1px solid ${type === 'approve' ? '#10B981' : '#DC2626'}`,
-      backgroundColor: 'transparent',
-      color: type === 'approve' ? '#10B981' : '#DC2626',
-      fontSize: '0.75rem',
-      cursor: 'pointer',
-      marginRight: '0.5rem'
-    })
+    }
   };
 
   return (
     <div style={styles.container} className="animate-fade-in">
       <div style={styles.headerRow}>
-        <h2 style={styles.title}>Maintenance Requests</h2>
+        <h2 style={styles.title}>Maintenance Management</h2>
         {!isManager && (
           <button style={styles.btnPrimary} onClick={() => setShowForm(!showForm)}>
             <Plus size={16} /> Raise Request
@@ -215,43 +240,52 @@ const Maintenance = () => {
         </div>
       )}
 
-      <div>
-        <div style={styles.tableHeader}>
-          <div>Asset</div>
-          <div>Issue</div>
-          <div>Requested By</div>
-          <div>Date</div>
-          <div>Status</div>
-          {isManager && <div>Actions</div>}
-        </div>
-        
-        {requests.map(req => (
-          <div key={req._id} style={{ ...styles.tableRow, gridTemplateColumns: isManager ? '1.5fr 2fr 1fr 1fr 1fr 1fr' : '1.5fr 2fr 1fr 1fr 1fr' }}>
-            <div style={{ fontWeight: '500' }}>{req.asset?.name} ({req.asset?.tag})</div>
-            <div style={{ color: '#64748B' }}>{req.issueDescription}</div>
-            <div>{req.requestedBy?.name}</div>
-            <div>{format(new Date(req.createdAt), 'MMM dd, yyyy')}</div>
-            <div>
-              <span style={styles.statusBadge(req.status)}>{req.status}</span>
-            </div>
-            {isManager && (
-              <div>
-                {req.status === 'Pending' && (
-                  <>
-                    <button style={styles.actionBtn('approve')} onClick={() => handleStatusUpdate(req._id, 'Approved')}>Approve</button>
-                    <button style={styles.actionBtn('reject')} onClick={() => handleStatusUpdate(req._id, 'Rejected')}>Reject</button>
-                  </>
-                )}
-                {req.status === 'Approved' && (
-                  <button style={styles.actionBtn('approve')} onClick={() => handleStatusUpdate(req._id, 'Resolved')}>Mark Resolved</button>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-        {requests.length === 0 && <div style={{ padding: '2rem', textAlign: 'center', color: '#94A3B8' }}>No maintenance requests found.</div>}
-      </div>
+      {/* KANBAN BOARD */}
+      <div style={styles.kanbanBoard}>
+        {COLUMNS.map(colStatus => {
+          const colRequests = requests.filter(r => r.status === colStatus);
+          return (
+            <div key={colStatus} style={styles.column}>
+              <div style={styles.columnHeader}>{colStatus}</div>
+              <div style={styles.cardList}>
+                {colRequests.map(req => (
+                  <div key={req._id} style={styles.card(req.status)}>
+                    <div style={styles.cardTag}>{req.asset?.tag || 'Asset'}</div>
+                    <div style={styles.cardDesc}>{req.issueDescription}</div>
+                    
+                    {req.technicianAssigned && (
+                       <div style={styles.cardMeta}>tech: {req.technicianAssigned}</div>
+                    )}
+                    
+                    {req.status === 'Resolved' && (
+                       <div style={styles.cardMeta}>resolved {format(new Date(req.updatedAt), 'd MMM')}</div>
+                    )}
 
+                    {/* Action buttons for Managers to move cards */}
+                    {isManager && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.5rem' }}>
+                        {req.status === 'Pending' && (
+                          <button style={styles.actionBtn} onClick={() => handleStatusUpdate(req._id, 'Approved')}>Approve &rarr;</button>
+                        )}
+                        {req.status === 'Approved' && (
+                          <button style={styles.actionBtn} onClick={() => handleStatusUpdate(req._id, 'In Progress')}>Start Work &rarr;</button>
+                        )}
+                        {req.status === 'In Progress' && (
+                          <button style={styles.actionBtn} onClick={() => handleStatusUpdate(req._id, 'Resolved')}>Resolve &rarr;</button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      
+      <div style={{ color: '#64748B', fontSize: '0.85rem', marginTop: '1rem', textAlign: 'center' }}>
+        Approving a card moves the asset to under maintenance, resolving return it to available.
+      </div>
     </div>
   );
 };
