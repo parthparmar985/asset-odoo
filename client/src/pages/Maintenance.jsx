@@ -1,35 +1,51 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { Wrench } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const Maintenance = () => {
   const { user } = useContext(AuthContext);
   const [requests, setRequests] = useState([]);
-  const [assets, setAssets] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+  const [myAssets, setMyAssets] = useState([]);
   
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    assetId: '', issueDescription: '', priority: 'Medium'
+    assetId: '', issueDescription: '', priority: 'Low'
   });
+
+  const isManager = ['Admin', 'Asset Manager'].includes(user?.role);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]);
 
   const fetchData = async () => {
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const [requestsRes, assetsRes] = await Promise.all([
-        axios.get('/api/maintenance', config).catch(() => ({ data: [] })),
-        axios.get('/api/assets', config).catch(() => ({ data: [] }))
-      ]);
-      setRequests(requestsRes.data);
-      setAssets(assetsRes.data);
+      
+      // Fetch maintenance requests
+      const { data } = await axios.get('/api/maintenance', config);
+      
+      if (isManager) {
+        setRequests(data);
+      } else {
+        // Employee only sees their own requests
+        setRequests(data.filter(r => r.requestedBy?._id === user._id));
+      }
+
+      // Fetch assets the user currently holds (for the dropdown)
+      if (!isManager) {
+        const allocRes = await axios.get('/api/allocations', config);
+        const activeMine = allocRes.data.filter(a => 
+          a.status === 'Active' && 
+          a.allocatedToUser?._id === user._id
+        ).map(a => a.asset);
+        setMyAssets(activeMine);
+      }
     } catch (error) {
-      console.error('Error fetching data');
+      toast.error('Error fetching maintenance data');
     }
   };
 
@@ -39,127 +55,203 @@ const Maintenance = () => {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       await axios.post('/api/maintenance', formData, config);
       setShowForm(false);
-      setFormData({ assetId: '', issueDescription: '', priority: 'Medium' });
-      toast.success('Maintenance request raised successfully!');
+      setFormData({ assetId: '', issueDescription: '', priority: 'Low' });
+      toast.success('Maintenance request submitted successfully!');
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error raising request');
+      toast.error(error.response?.data?.message || 'Error submitting request');
     }
   };
 
-  const handleStatusUpdate = async (id, status) => {
+  const handleStatusUpdate = async (id, newStatus) => {
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      await axios.put(`/api/maintenance/${id}/status`, { status }, config);
-      toast.success(`Request status updated to ${status}`);
+      await axios.put(`/api/maintenance/${id}/status`, { status: newStatus }, config);
+      toast.success(`Request marked as ${newStatus}`);
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error updating status');
     }
   };
 
+  const styles = {
+    container: {
+      padding: '1.5rem',
+      fontFamily: "'Outfit', sans-serif"
+    },
+    headerRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '1.5rem'
+    },
+    title: {
+      fontSize: '1.25rem',
+      fontWeight: '600',
+      color: '#1E293B'
+    },
+    btnPrimary: {
+      padding: '0.6rem 1.25rem',
+      borderRadius: '12px',
+      border: '1.5px solid #1E293B',
+      backgroundColor: '#E2F0EA',
+      color: '#1E293B',
+      fontWeight: '600',
+      fontSize: '0.9rem',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.25rem'
+    },
+    formCard: {
+      padding: '1.5rem',
+      border: '1.5px solid #1E293B',
+      borderRadius: '16px',
+      marginBottom: '2rem',
+      backgroundColor: '#F8FAFC'
+    },
+    input: {
+      width: '100%',
+      padding: '0.6rem 1rem',
+      borderRadius: '8px',
+      border: '1.5px solid #1E293B',
+      backgroundColor: '#FFFFFF',
+      fontSize: '0.95rem',
+      outline: 'none',
+      marginBottom: '1rem'
+    },
+    tableHeader: {
+      backgroundColor: '#F1F0EA',
+      borderRadius: '12px',
+      border: '1.5px solid #1E293B',
+      display: 'grid',
+      gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 1fr',
+      padding: '0.75rem 1.5rem',
+      fontWeight: '600',
+      color: '#475569',
+      marginBottom: '0.5rem'
+    },
+    tableRow: {
+      display: 'grid',
+      gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 1fr',
+      padding: '0.875rem 1.5rem',
+      alignItems: 'center',
+      borderBottom: '1px solid #E2E8F0',
+      color: '#334155',
+      fontSize: '0.9rem'
+    },
+    statusBadge: (status) => {
+      let color = '#64748B';
+      if(status === 'Pending') color = '#F59E0B';
+      if(status === 'Approved' || status === 'In Progress') color = '#3B82F6';
+      if(status === 'Resolved') color = '#10B981';
+      if(status === 'Rejected') color = '#DC2626';
+      
+      return {
+        display: 'inline-block',
+        padding: '0.25rem 0.75rem',
+        borderRadius: '20px',
+        border: `1.5px solid ${color}`,
+        color: color,
+        fontSize: '0.75rem',
+        fontWeight: '600'
+      };
+    },
+    actionBtn: (type) => ({
+      padding: '0.25rem 0.75rem',
+      borderRadius: '6px',
+      border: `1px solid ${type === 'approve' ? '#10B981' : '#DC2626'}`,
+      backgroundColor: 'transparent',
+      color: type === 'approve' ? '#10B981' : '#DC2626',
+      fontSize: '0.75rem',
+      cursor: 'pointer',
+      marginRight: '0.5rem'
+    })
+  };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2>Maintenance Management</h2>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          <Wrench size={18} /> {showForm ? 'Cancel' : 'Raise Request'}
-        </button>
+    <div style={styles.container} className="animate-fade-in">
+      <div style={styles.headerRow}>
+        <h2 style={styles.title}>Maintenance Requests</h2>
+        {!isManager && (
+          <button style={styles.btnPrimary} onClick={() => setShowForm(!showForm)}>
+            <Plus size={16} /> Raise Request
+          </button>
+        )}
       </div>
 
-      {showForm && (
-        <div className="card mb-6" style={{ borderTop: '4px solid var(--primary-color)' }}>
-          <h3>New Maintenance Request</h3>
-          <form onSubmit={handleRaiseRequest} className="mt-4 grid-cols-2">
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">Asset</label>
-              <select className="form-input" value={formData.assetId} onChange={e => setFormData({...formData, assetId: e.target.value})} required>
-                <option value="">Select Asset</option>
-                {assets.map(a => <option key={a._id} value={a._id}>{a.tag} - {a.name}</option>)}
+      {showForm && !isManager && (
+        <div style={styles.formCard}>
+          <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: '#1E293B' }}>Report an Issue</h3>
+          <form onSubmit={handleRaiseRequest} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748B' }}>Select Asset</label>
+              <select style={styles.input} required value={formData.assetId} onChange={e => setFormData({...formData, assetId: e.target.value})}>
+                <option value="">Choose an asset you hold...</option>
+                {myAssets.map(a => <option key={a?._id} value={a?._id}>{a?.tag} - {a?.name}</option>)}
               </select>
             </div>
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">Issue Description</label>
-              <textarea 
-                className="form-input" 
-                rows="3" 
-                value={formData.issueDescription} 
-                onChange={e => setFormData({...formData, issueDescription: e.target.value})} 
-                required 
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Priority</label>
-              <select className="form-input" value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748B' }}>Priority</label>
+              <select style={styles.input} required value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value})}>
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
-                <option value="Critical">Critical</option>
               </select>
             </div>
-            <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="submit" className="btn btn-primary">Submit Request</button>
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748B' }}>Issue Description</label>
+              <textarea 
+                style={{ ...styles.input, minHeight: '80px', resize: 'none' }} 
+                required 
+                value={formData.issueDescription} 
+                onChange={e => setFormData({...formData, issueDescription: e.target.value})}
+              />
+            </div>
+            <div style={{ gridColumn: 'span 2' }}>
+              <button type="submit" style={styles.btnPrimary}>Submit Request</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="card">
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                <th style={{ padding: '0.75rem' }}>Asset</th>
-                <th style={{ padding: '0.75rem' }}>Requested By</th>
-                <th style={{ padding: '0.75rem' }}>Issue</th>
-                <th style={{ padding: '0.75rem' }}>Priority</th>
-                <th style={{ padding: '0.75rem' }}>Status</th>
-                <th style={{ padding: '0.75rem' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.length === 0 ? (
-                <tr><td colSpan="6" style={{ padding: '1.5rem', textAlign: 'center' }}>No requests found.</td></tr>
-              ) : (
-                requests.map(r => (
-                  <tr key={r._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '0.75rem', fontWeight: '500' }}>{r.asset?.tag} - {r.asset?.name}</td>
-                    <td style={{ padding: '0.75rem' }}>{r.requestedBy?.name}</td>
-                    <td style={{ padding: '0.75rem', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {r.issueDescription}
-                    </td>
-                    <td style={{ padding: '0.75rem' }}>
-                      <span className={`badge ${r.priority === 'Critical' || r.priority === 'High' ? 'badge-danger' : 'badge-warning'}`}>
-                        {r.priority}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem' }}>
-                      <span className={`badge ${
-                        r.status === 'Pending' ? 'badge-warning' : 
-                        r.status === 'Resolved' ? 'badge-success' : 
-                        r.status === 'Approved' || r.status === 'In Progress' ? 'badge-info' : 'badge-danger'
-                      }`}>
-                        {r.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '0.75rem' }}>
-                      {(user?.role === 'Admin' || user?.role === 'Asset Manager') && r.status === 'Pending' && (
-                        <div className="flex gap-4">
-                          <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => handleStatusUpdate(r._id, 'Approved')}>Approve</button>
-                          <button className="btn btn-danger" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => handleStatusUpdate(r._id, 'Rejected')}>Reject</button>
-                        </div>
-                      )}
-                      {(user?.role === 'Admin' || user?.role === 'Asset Manager') && r.status === 'Approved' && (
-                        <button className="btn btn-info" style={{ backgroundColor: '#0EA5E9', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.75rem', border: 'none', borderRadius: 'var(--radius-md)' }} onClick={() => handleStatusUpdate(r._id, 'Resolved')}>Mark Resolved</button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      <div>
+        <div style={styles.tableHeader}>
+          <div>Asset</div>
+          <div>Issue</div>
+          <div>Requested By</div>
+          <div>Date</div>
+          <div>Status</div>
+          {isManager && <div>Actions</div>}
         </div>
+        
+        {requests.map(req => (
+          <div key={req._id} style={{ ...styles.tableRow, gridTemplateColumns: isManager ? '1.5fr 2fr 1fr 1fr 1fr 1fr' : '1.5fr 2fr 1fr 1fr 1fr' }}>
+            <div style={{ fontWeight: '500' }}>{req.asset?.name} ({req.asset?.tag})</div>
+            <div style={{ color: '#64748B' }}>{req.issueDescription}</div>
+            <div>{req.requestedBy?.name}</div>
+            <div>{format(new Date(req.createdAt), 'MMM dd, yyyy')}</div>
+            <div>
+              <span style={styles.statusBadge(req.status)}>{req.status}</span>
+            </div>
+            {isManager && (
+              <div>
+                {req.status === 'Pending' && (
+                  <>
+                    <button style={styles.actionBtn('approve')} onClick={() => handleStatusUpdate(req._id, 'Approved')}>Approve</button>
+                    <button style={styles.actionBtn('reject')} onClick={() => handleStatusUpdate(req._id, 'Rejected')}>Reject</button>
+                  </>
+                )}
+                {req.status === 'Approved' && (
+                  <button style={styles.actionBtn('approve')} onClick={() => handleStatusUpdate(req._id, 'Resolved')}>Mark Resolved</button>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+        {requests.length === 0 && <div style={{ padding: '2rem', textAlign: 'center', color: '#94A3B8' }}>No maintenance requests found.</div>}
       </div>
+
     </div>
   );
 };

@@ -1,0 +1,87 @@
+-- Users Table
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'Employee',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Categories Table
+CREATE TABLE categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_name TEXT NOT NULL UNIQUE
+);
+
+-- Assets Table
+CREATE TABLE assets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_code TEXT UNIQUE NOT NULL,
+    asset_name TEXT NOT NULL,
+    category_id INTEGER,
+    brand TEXT,
+    model TEXT,
+    purchase_date DATE,
+    purchase_cost REAL,
+    status TEXT DEFAULT 'Available',
+    location TEXT,
+    assigned_to INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(category_id) REFERENCES categories(id),
+    FOREIGN KEY(assigned_to) REFERENCES users(id)
+);
+
+-- Asset Allocation History
+CREATE TABLE asset_allocations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    allocated_date DATE,
+    returned_date DATE,
+    status TEXT DEFAULT 'Allocated',
+    FOREIGN KEY(asset_id) REFERENCES assets(id),
+    FOREIGN KEY(user_id) REFERENCES users(id)
+);
+
+-- Maintenance Table
+CREATE TABLE maintenance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_id INTEGER NOT NULL,
+    maintenance_date DATE,
+    description TEXT,
+    cost REAL,
+    next_due DATE,
+    FOREIGN KEY(asset_id) REFERENCES assets(id)
+);
+
+-- Vendors Table
+CREATE TABLE vendors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vendor_name TEXT NOT NULL,
+    contact_person TEXT,
+    phone TEXT,
+    email TEXT,
+    address TEXT
+);
+
+-- Purchase Records
+CREATE TABLE purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_id INTEGER,
+    vendor_id INTEGER,
+    invoice_no TEXT,
+    purchase_date DATE,
+    amount REAL,
+    FOREIGN KEY(asset_id) REFERENCES assets(id),
+    FOREIGN KEY(vendor_id) REFERENCES vendors(id)
+);
+
+-- Notifications
+CREATE TABLE notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    message TEXT,
+    status TEXT DEFAULT 'Unread',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
