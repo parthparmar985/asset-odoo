@@ -18,6 +18,7 @@ connectDB();
 
 const app = express();
 
+// Enable Cross-Origin Resource Sharing for frontend integration
 app.use(cors());
 app.use(express.json());
 
